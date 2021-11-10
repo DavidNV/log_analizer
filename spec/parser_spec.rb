@@ -1,4 +1,4 @@
-class Parser;end
+class LogAnalizer;end
 
 =begin
   Parser Rules
@@ -19,27 +19,92 @@ class Parser;end
 =end
 
 
-RSpec.describe Parser do
+RSpec.describe LogAnalizer do
+  shared_context "valid_lines_with_different_origins_and_query_strings" do ||
+    let(:valid_lines) do
+      [ 
+        ["/index/", "316.433.849.805" ],
+        ["/index/", "316.433.849.805" ],
+        ["/index/2", "43.10.44.29" ],
+        ["/index/2", "316.433.849.805" ],
+        ["/valid_test?extra=1", "316.433.849.805" ],
+        ["/valid_test?extra=1", "316.433.849.805" ],
+        ["/valid_test?extra=1", "44.43.84.85" ],
+        ["/valid_test?extra=2", "316.433.849.805" ],
+        ["/about/", "316.433.849.805" ],
+        ["/about/2", "43.10.44.29" ],
+        ["/about/2", "316.433.849.805" ],
+        ["/about/2", "43.10.44.29" ],
+        ["/about/2", "43.10.44.29" ],
+        ["/about/2", "43.10.44.29" ],
+        ["/about/2", "316.433.849.805" ],
+        ["/about/2", "316.433.849.805" ],
+      ]
+    end
+  end
+
+  shared_context "valid_and_invalid_lines_with_different_origins_and_query_strings" do ||
+    let(:valid_and_invalid_lines) do
+      [ 
+        ["/index/", "316.433.849.805" ],
+        ["/index/", "316.433.849.805" ],             # duplicated origin
+        ["/index/", "ddd.433.849.805" ],             # malformed origin
+        ["/index/2", "43.10.44.29" ],
+        ["/index/2", "316.433.849.805" ],
+        ["/valid_test?extra=1", "316.433.849.805" ],
+        ["/valid_test?extra=1", "316.433.849.805" ], # duplicated origin
+        ["/valid_test?extra=2", "" ],                # missing origin
+        ["/valid_test?extra=2", "316.433.849.805" ],
+        ["/about/", "316.433.849.805" ],
+        ["/about/2", "43.10.44.29" ],
+        ["/about/2", "11.12.44.59" ],
+        ["/about/2", "316.433.849.805" ],            # duplicated origins
+        ["/about/2", "43.10.44.29" ],
+        ["/about/2", "43.10.44.29" ],
+        ["/about/2", "316.433.849.805" ],
+        ["/about/2", "316.433.849.805" ],
+      ]
+    end
+  end
 
   describe "#most_visited_pages" do
 
-    context "with no malformed or missing origins" do
-      it "should rank ALL visited pages in descendent order" do
+    context "with valid lines parsed from log file" do
+      include_context 'valid_lines_with_different_origins_and_query_strings'
+
+      context "with no malformed or missing origins, repeated urls, with urls with querystrings and different origins" do
+        it "should rank ALL visited pages in descendent order" do
+          expected_result = {
+            "/index": "2 visits",
+            "/index/2": "2 visits",
+            "/valid_test?extra=1": "3 visits",
+            "/valid_test?extra=2": "1 visit",
+            "/about/": "1 visit",
+            "/about/2": "7 visits",
+          }
+          result = LogAnalizer.new(valid_lines).most_visited_pages
+          expect(result).to_match(expected_result)
+        end
       end
+
     end
 
-    context "with repeated urls and different origins" do
-      it "should rank ALL visited pages in descendent order" do
-      end
-    end
+    context "with not good lines from log file" do
+      include_context 'valid_and_invalid_lines_with_different_origins_and_query_strings'
 
-    context "with urls with query strings and different origins" do
-      it "should rank ALL visited pages in descendent order" do
-      end
-    end
-
-    context "with malformed or missing origins" do
-      it "should rank the VALID visited pages in descendent order" do
+      context "with malformed or missing origins" do
+        it "should rank the VALID visited pages in descendent order" do
+          expected_result = {
+            "/index": "1 visit",
+            "/index/2": "2 visits",
+            "/valid_test?extra=1": "1 visit",
+            "/valid_test?extra=2": "1 visit",
+            "/about/": "1 visit",
+            "/about/2": "3 visits",
+          }
+          result = LogAnalizer.new(valid_and_invalid_lines).most_visited_pages
+          expect(result).to_match(expected_result)
+        end
       end
     end
 
@@ -47,25 +112,44 @@ RSpec.describe Parser do
 
   describe "#unique_most_visited_pages" do
 
-    context "with no malformed or missing origins" do
-      it "should rank unique visited pages per origin in descendent order" do
+    context "with valid lines parsed from log file" do
+      include_context 'valid_lines_with_different_origins_and_query_strings'
+
+      context "with no malformed or missing origins, repeated urls, with urls with querystrings and different origins" do
+        it "should rank unique visited pages per origin in descendent order" do
+          expected_result = {
+            "/index": "1 visit",
+            "/index/2": "2 visits",
+            "/valid_test?extra=1": "2 visits",
+            "/valid_test?extra=2": "1 visit",
+            "/about/": "1 visit",
+            "/about/2": "2 visits",
+          }
+          result = LogAnalizer.new(valid_lines).unique_most_visited_pages
+          expect(result).to_match(expected_result)
+        end
       end
+
     end
 
-    context "with repeated urls and different origins" do
-      it "should rank unique visited pages per origin in descendent order" do
-      end
-    end
+    context "with not good lines from log file" do
+      include_context 'valid_and_invalid_lines_with_different_origins_and_query_strings'
 
-    context "with urls with query strings and different origins" do
-      it "should rank unique visited pages in descendent order" do
+      context "with malformed or missing origins" do
+        it "should rank the UNIQUE VALID visited pages in descendent order" do
+          expected_result = {
+            "/index": "1 visit",
+            "/index/2": "2 visits",
+            "/valid_test?extra=1": "1 visit",
+            "/valid_test?extra=2": "1 visit",
+            "/about/": "1 visit",
+            "/about/2": "3 visits",
+          }
+          result = LogAnalizer.new(valid_lines).unique_most_visited_pages
+          expect(result).to_match(expected_result)
+        end
       end
-    end
 
-    context "with malformed or missing origins" do
-      it "should rank the UNIQUE VALID visited pages in descendent order" do
-      end
     end
-
   end
 end
