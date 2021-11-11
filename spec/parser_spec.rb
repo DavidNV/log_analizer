@@ -1,4 +1,4 @@
-class LogAnalizer;end
+require_relative './../log_analizer.rb'
 
 =begin
   Parser Rules
@@ -20,7 +20,7 @@ class LogAnalizer;end
 
 
 RSpec.describe LogAnalizer do
-  shared_context "valid_lines_with_different_origins_and_query_strings" do ||
+  shared_context "valid_lines_with_different_origins_and_query_strings" do
     let(:valid_lines) do
       [ 
         ["/index/", "316.433.849.805" ],
@@ -43,7 +43,7 @@ RSpec.describe LogAnalizer do
     end
   end
 
-  shared_context "valid_and_invalid_lines_with_different_origins_and_query_strings" do ||
+  shared_context "valid_and_invalid_lines_with_different_origins_and_query_strings" do
     let(:valid_and_invalid_lines) do
       [ 
         ["/index/", "316.433.849.805" ],
@@ -145,7 +145,7 @@ RSpec.describe LogAnalizer do
             "/about/": "1 visit",
             "/about/2": "3 visits",
           }
-          result = LogAnalizer.new(valid_lines).unique_most_visited_pages
+          result = LogAnalizer.new(valid_and_invalid_lines).unique_most_visited_pages
           expect(result).to_match(expected_result)
         end
       end
