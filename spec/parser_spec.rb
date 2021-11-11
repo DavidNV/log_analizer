@@ -16,6 +16,7 @@ require_relative './../log_analizer.rb'
     * For unique most visited pages, it will add one extra view to the count since we know for sure at least one time the url was accessed
   - If the url contains query strings it will be treated as a unique url.
   - If the origin is malformed the line will be ignored.
+  - Domain is assumed Ipv4 numeric
 =end
 
 
@@ -95,12 +96,12 @@ RSpec.describe LogAnalizer do
       context "with malformed or missing origins" do
         it "should rank the VALID visited pages in descendent order" do
           expected_result = {
-            "/index/": 1,
+            "/index/": 2,
             "/index/2": 2,
-            "/valid_test?extra=1": 1,
+            "/valid_test?extra=1": 2,
             "/valid_test?extra=2": 1,
             "/about/": 1,
-            "/about/2": 3,
+            "/about/2": 7,
           }
           result = LogAnalizer.new(valid_and_invalid_lines).most_visited_pages
           expect(result).to match(expected_result)
