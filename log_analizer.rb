@@ -1,3 +1,5 @@
+require_relative 'domain.rb'
+
 class LogAnalizer
 
   attr_reader :lines
@@ -28,8 +30,9 @@ class LogAnalizer
     lines.each do |line|
 
       line_parsed = line.gsub("\n", "").scan(/([^\s]+)/).flatten
-      url = line_parsed[0]
       domain = line_parsed[1]
+      next unless Domain.new(domain).valid?
+      url = line_parsed[0]
 
       @lines_parsed[url] << domain
     end
