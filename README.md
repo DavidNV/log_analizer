@@ -10,8 +10,8 @@ Lib that receieves a log file and defines most visited pages and unique most vis
 
 ### Dependencies
 
-Ruby 3.0.0
-Bundler 2.2.3
+* Ruby 3.0.0
+* Bundler 2.2.3
 
 ### Installing
 
